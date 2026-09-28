@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Lär dig klockan</title>
+<style>
+  :root {
+    --bg: #f7f2ff;
+    --face: #ffffff;
+    --rim: #9b5de5;
+    --ink: #3a3a4a;
+    --hour: #2e9fd4;
+    --minute: #7d8792;
+    --second: #999;
+    --soft: #8a8aa0;
+    --btn: #ffffff;
+    --btn-border: #dccbf5;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 16px 20px;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  h1 { margin: 4px 0 8px; font-size: 26px; letter-spacing: 2px; }
+  .hint { color: var(--soft); font-size: 14px; margin-bottom: 8px; text-align: center; }
+  .hint b.h { color: var(--hour); }
+  .hint b.m { color: var(--minute); }
+  .stage { display: flex; align-items: flex-end; justify-content: center; gap: 4px; position: relative; }
+  .bear { width: min(34vw, 32vh, 280px); margin-left: -30px; pointer-events: none; transform-origin: 50% 100%; animation: wobble 4s ease-in-out infinite; }
+  @keyframes wobble { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  #clock {
+    width: min(calc(100vw - 32px), 60vh, 560px);
+    height: auto;
+    touch-action: none;
+    display: block;
+  }
+  .hand { cursor: grab; }
+  .hand.dragging { cursor: grabbing; }
+  .readout {
+    margin-top: 10px;
+    text-align: center;
+    min-height: 96px;
+    transition: opacity .2s;
+  }
+  .readout.hidden { opacity: 0; }
+  .digital {
+    font-size: 48px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 2px;
+  }
+  .digital .hh { color: var(--hour); }
+  .digital .mm { color: var(--minute); }
+  .words { font-size: 26px; margin-top: 2px; }
+  .words .period { color: var(--soft); font-size: 20px; }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 12px;
+    max-width: 560px;
+  }
+  button {
+    font: inherit;
+    font-size: 14px;
+    padding: 8px 4px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    line-height: 1.2;
+    touch-action: manipulation;
+    border: 2px solid var(--btn-border);
+    background: var(--btn);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  button .ic { font-size: 22px; }
+  .row.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    width: min(100%, 460px);
+  }
+  button:active { transform: scale(.96); }
+  button.on { background: #ece0ff; border-color: var(--rim); }
+  label.toggle select { font: inherit; font-size: 15px; padding: 4px 6px; border-radius: 8px; border: 2px solid var(--btn-border); background: var(--btn); color: var(--ink); }
+  label.toggle { display: flex; align-items: center; gap: 6px; font-size: 16px; color: var(--soft); }
+
+  /* narrower screens (iPad portrait, phones): bear sits under the clock */
+  @media (max-width: 899px) {
+    .stage { flex-direction: column; align-items: center; }
+    .bear { width: 140px; margin: -36px 0 0 60%; }
+  }
+  /* phones: tighten type */
+  @media (max-width: 700px) {
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .hint { font-size: 13px; }
+    .bear { width: 110px; margin: -28px 0 0 55%; }
+    .readout { margin-top: 0; min-height: 84px; }
+    .digital { font-size: 40px; }
+    .words { font-size: 21px; }
+    .words .period { font-size: 16px; }
+    button { font-size: 12.5px; padding: 7px 2px; }
+    button .ic { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🕐 Lär dig klockan</h1>
+<div class="hint">Dra i den <b class="h">ljusblå korta visaren (timvisaren)</b> eller den <b class="m">silverfärgade långa visaren (minutvisaren)</b></div>
+
+<div class="stage">
+<svg id="clock" viewBox="-250 -250 500 500" aria-label="Klocka"></svg>
+<svg class="bear" viewBox="0 0 300 330" aria-hidden="true">
+  <g stroke="#c98a1f" stroke-width="2.5" stroke-linejoin="round">
+    <!-- ears -->
+    <circle cx="92" cy="58" r="22" fill="#f6c141"/>
+    <circle cx="92" cy="58" r="11" fill="#e6a331" stroke="none"/>
+    <circle cx="208" cy="58" r="22" fill="#f6c141"/>
+    <circle cx="208" cy="58" r="11" fill="#e6a331" stroke="none"/>
+    <!-- round belly -->
+    <ellipse cx="150" cy="232" rx="90" ry="72" fill="#f6c141"/>
+    <!-- sitting legs, soles to viewer -->
+    <ellipse cx="86" cy="296" rx="44" ry="28" fill="#f6c141" transform="rotate(-12 86 296)"/>
+    <ellipse cx="214" cy="296" rx="44" ry="28" fill="#f6c141" transform="rotate(12 214 296)"/>
+    <ellipse cx="60" cy="300" rx="18" ry="22" fill="#fbd98a"/>
+    <ellipse cx="240" cy="300" rx="18" ry="22" fill="#fbd98a"/>
+  </g>
+  <!-- short red shirt -->
+  <path d="M66 204 Q62 172 108 160 L192 160 Q238 172 234 204 Q196 222 150 222 Q104 222 66 204 Z" fill="#d8312f" stroke="#a82222" stroke-width="2.5"/>
+  <!-- honey pot in lap -->
+  <path d="M110 240 Q104 306 150 310 Q196 306 190 240 Z" fill="#c4742c" stroke="#8d4f18" stroke-width="2.5"/>
+  <rect x="116" y="228" width="68" height="15" rx="7" fill="#a35d20" stroke="#8d4f18" stroke-width="2"/>
+  <path d="M118 232 Q150 222 182 232 L181 238 Q178 256 173 239 Q160 237 152 240 Q148 262 142 240 Q130 238 124 239 Q121 250 118 238 Z" fill="#ffbf1f"/>
+  <rect x="120" y="262" width="60" height="24" rx="3" fill="#f5e6c4" transform="rotate(-4 150 274)"/>
+  <text x="150" y="280" text-anchor="middle" font-size="16" font-weight="800" fill="#6b3a12" font-family="Georgia, serif" transform="rotate(-4 150 274)">HUNNY</text>
+  <!-- left arm hugging the pot -->
+  <ellipse cx="104" cy="250" rx="18" ry="32" fill="#f6c141" stroke="#c98a1f" stroke-width="2.5" transform="rotate(-18 104 250)"/>
+  <!-- head -->
+  <g stroke="#c98a1f" stroke-width="2.5">
+    <path d="M150 42 C210 42 234 78 232 112 C230 150 196 176 150 176 C104 176 70 150 68 112 C66 78 90 42 150 42 Z" fill="#f6c141"/>
+    <ellipse cx="150" cy="134" rx="38" ry="28" fill="#fbd98a" stroke="none"/>
+  </g>
+  <!-- face -->
+  <path d="M108 86 Q118 80 128 86 M172 86 Q182 80 192 86" stroke="#7a4a14" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="118" cy="100" r="5.5" fill="#2a1a0c"/>
+  <circle cx="182" cy="100" r="5.5" fill="#2a1a0c"/>
+  <ellipse cx="150" cy="118" rx="15" ry="10" fill="#3b2412"/>
+  <ellipse cx="146" cy="115" rx="4" ry="2.5" fill="#fff" opacity=".5"/>
+  <path d="M132 142 Q150 162 168 142 Q150 150 132 142 Z" fill="#7a2a1a"/>
+  <ellipse cx="152" cy="152" rx="7" ry="4" fill="#ff8a8a"/>
+  <circle cx="98" cy="128" r="11" fill="#ff9d7a" opacity=".45"/>
+  <circle cx="202" cy="128" r="11" fill="#ff9d7a" opacity=".45"/>
+  <!-- honey on chin -->
+  <path d="M160 150 Q166 156 162 166 Q158 170 157 162 Q156 156 160 150 Z" fill="#ffbf1f"/>
+  <!-- right arm raised: paw full of honey at the mouth -->
+  <line x1="222" y1="196" x2="186" y2="152" stroke="#c98a1f" stroke-width="37" stroke-linecap="round"/>
+  <line x1="222" y1="196" x2="186" y2="152" stroke="#f6c141" stroke-width="32" stroke-linecap="round"/>
+  <path d="M170 146 Q186 128 202 146 Q204 156 198 160 Q196 172 192 162 Q186 166 184 176 Q180 168 180 160 Q172 158 170 146 Z" fill="#ffbf1f" stroke="#e59a00" stroke-width="1.5"/>
+</svg>
+</div>
+
+<div class="readout" id="readout">
+  <div class="digital"><span class="hh" id="dh">3</span>:<span class="mm" id="dm">00</span></div>
+  <div class="words"><span id="words">tre</span> <span class="period" id="period">på eftermiddagen</span></div>
+</div>
+
+<div class="row buttons">
+  <button id="btnNow"><span class="ic">⏰</span><span>Klockan nu</span></button>
+  <button id="btnRandom"><span class="ic">🎲</span><span>Ny fråga</span></button>
+  <button id="btnHide"><span class="ic">🙈</span><span class="lbl">Dölj svaret</span></button>
+  <button id="btnSpeak"><span class="ic">🔊</span><span>Läs upp</span></button>
+</div>
+
+<div class="row">
+  <label class="toggle">Siffror:
+    <select id="hourMode">
+      <option value="all">Alla 1–12</option>
+      <option value="quarter">Bara 12, 3, 6, 9</option>
+      <option value="none">Inga</option>
+    </select>
+  </label>
+</div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('clock');
+const el = (tag, attrs, parent = svg) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  parent.appendChild(e);
+  return e;
+};
+
+const numColors = ['#e8505b','#f2994a','#f2c94c','#6fcf97','#27ae60','#2d9cdb',
+                   '#2f80ed','#9b51e0','#bb6bd9','#eb5757','#f2994a','#27ae60'];
+
+// ---------- Face ----------
+el('circle', { r: 240, fill: '#9b5de5' });
+el('circle', { r: 228, fill: '#ffffff' });
+
+// ticks
+for (let i = 0; i < 60; i++) {
+  const a = i * 6 * Math.PI / 180;
+  const big = i % 5 === 0;
+  const r1 = big ? 178 : 186, r2 = 196;
+  el('line', {
+    x1: Math.sin(a) * r1, y1: -Math.cos(a) * r1,
+    x2: Math.sin(a) * r2, y2: -Math.cos(a) * r2,
+    stroke: big ? '#3a3a4a' : '#bbb', 'stroke-width': big ? 5 : 2, 'stroke-linecap': 'round'
+  });
+}
+
+// hour numbers (gold)
+const defs = el('defs', {});
+const grad = el('linearGradient', { id: 'gold', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+el('stop', { offset: '0%', 'stop-color': '#ffe27a' }, grad);
+el('stop', { offset: '50%', 'stop-color': '#e0a91b' }, grad);
+el('stop', { offset: '100%', 'stop-color': '#b07d0a' }, grad);
+const hourNums = el('g', {});
+for (let h = 1; h <= 12; h++) {
+  const a = h * 30 * Math.PI / 180;
+  const r = 148;
+  const t = el('text', {
+    x: Math.sin(a) * r, y: -Math.cos(a) * r + 15,
+    'text-anchor': 'middle', 'font-size': 42, 'font-weight': 800, fill: 'url(#gold)', stroke: '#8a6300', 'stroke-width': 0.8
+  }, hourNums);
+  t.textContent = h;
+  if (h % 3 !== 0) t.classList.add('minor');
+}
+
+// ---------- Hands ----------
+function makeHand(len, width, color, tail, outline) {
+  const g = el('g', { class: 'hand' });
+  // invisible fat hit area
+  el('line', { x1: 0, y1: tail, x2: 0, y2: -len - 10, stroke: 'transparent', 'stroke-width': 60, 'stroke-linecap': 'round' }, g);
+  if (outline) {
+    el('line', { x1: 0, y1: tail, x2: 0, y2: -len, stroke: outline, 'stroke-width': width + 3, 'stroke-linecap': 'round' }, g);
+    el('circle', { cx: 0, cy: -len + 4, r: width * 0.9 + 1.5, fill: outline }, g);
+  }
+  el('line', { x1: 0, y1: tail, x2: 0, y2: -len, stroke: color, 'stroke-width': width, 'stroke-linecap': 'round' }, g);
+  el('circle', { cx: 0, cy: -len + 4, r: width * 0.9, fill: color }, g);
+  return g;
+}
+// silver gradient across the hand's width
+const silver = el('linearGradient', { id: 'silver', gradientUnits: 'userSpaceOnUse', x1: -10, y1: 0, x2: 10, y2: 0 }, defs);
+el('stop', { offset: '0%', 'stop-color': '#9aa3ad' }, silver);
+el('stop', { offset: '45%', 'stop-color': '#f4f6f8' }, silver);
+el('stop', { offset: '100%', 'stop-color': '#8b949e' }, silver);
+const minuteHand = makeHand(172, 10, 'url(#silver)', 22, '#6b737c');
+const hourHand   = makeHand(108, 16, 'skyblue', 18, '#4aa3cc');
+el('circle', { r: 14, fill: '#3a3a4a' });
+el('circle', { r: 5, fill: '#9b5de5' });
+
+// ---------- State ----------
+// total minutes since midnight (0..1439)
+let total = 15 * 60;
+
+// Swedish number words
+const HOURS = ['tolv','ett','två','tre','fyra','fem','sex','sju','åtta','nio','tio','elva','tolv'];
+const NUMS = ['noll','en','två','tre','fyra','fem','sex','sju','åtta','nio','tio','elva','tolv',
+              'tretton','fjorton','femton','sexton','sjutton','arton','nitton','tjugo'];
+function periodOf(h24) {
+  if (h24 < 5) return 'på natten';
+  if (h24 < 9) return 'på morgonen';
+  if (h24 < 12) return 'på förmiddagen';
+  if (h24 < 13) return 'mitt på dagen';
+  if (h24 < 18) return 'på eftermiddagen';
+  return 'på kvällen';
+}
+// "fem", "tio", "kvart", "tjugo" stand alone; other counts get "minut(er)"
+function mins(n) {
+  if (n === 15) return 'kvart';
+  if (n % 5 === 0) return NUMS[n];
+  return n === 1 ? 'en minut' : `${NUMS[n]} minuter`;
+}
+function swedishTime(h12, m) {
+  const h = HOURS[h12];
+  const next = HOURS[h12 % 12 + 1];
+  if (m === 0) return h;
+  if (m <= 20) return `${mins(m)} över ${h}`;
+  if (m < 30) return `${mins(30 - m)} i halv ${next}`;
+  if (m === 30) return `halv ${next}`;
+  if (m < 40) return `${mins(m - 30)} över halv ${next}`;
+  return `${mins(60 - m)} i ${next}`;
+}
+
+function render() {
+  total = ((total % 1440) + 1440) % 1440;
+  const h24 = Math.floor(total / 60);
+  const m = total % 60;
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+
+  minuteHand.setAttribute('transform', `rotate(${m * 6})`);
+  hourHand.setAttribute('transform', `rotate(${(h24 % 12) * 30 + m * 0.5})`);
+
+  document.getElementById('dh').textContent = h12;
+  document.getElementById('dm').textContent = String(m).padStart(2, '0');
+  document.getElementById('period').textContent = periodOf(h24);
+
+  const w = swedishTime(h12, m);
+  document.getElementById('words').textContent = w;
+}
+
+// ---------- Dragging ----------
+function pointerAngle(evt) {
+  const pt = svg.createSVGPoint();
+  pt.x = evt.clientX; pt.y = evt.clientY;
+  const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+  let deg = Math.atan2(p.x, -p.y) * 180 / Math.PI;
+  return (deg + 360) % 360;
+}
+
+let drag = null; // { which, lastAngle, acc }
+
+function startDrag(which, handEl) {
+  return evt => {
+    evt.preventDefault();
+    handEl.setPointerCapture(evt.pointerId);
+    handEl.classList.add('dragging');
+    drag = { which, handEl, lastAngle: pointerAngle(evt), acc: total };
+  };
+}
+minuteHand.addEventListener('pointerdown', startDrag('m', minuteHand));
+hourHand.addEventListener('pointerdown', startDrag('h', hourHand));
+
+svg.addEventListener('pointermove', evt => {
+  if (!drag) return;
+  const a = pointerAngle(evt);
+  let d = a - drag.lastAngle;
+  if (d > 180) d -= 360;
+  if (d < -180) d += 360;
+  drag.lastAngle = a;
+  // minute hand: 6°/min ; hour hand: 0.5°/min
+  drag.acc += drag.which === 'm' ? d / 6 : d / 0.5;
+  total = Math.round(drag.acc);
+  render();
+});
+function endDrag() {
+  if (!drag) return;
+  drag.handEl.classList.remove('dragging');
+  drag = null;
+}
+svg.addEventListener('pointerup', endDrag);
+svg.addEventListener('pointercancel', endDrag);
+
+// ---------- Controls ----------
+
+document.getElementById('btnNow').onclick = () => {
+  const d = new Date();
+  total = d.getHours() * 60 + d.getMinutes();
+  render();
+};
+
+const readout = document.getElementById('readout');
+const btnHide = document.getElementById('btnHide');
+function setHidden(h) {
+  readout.classList.toggle('hidden', h);
+  btnHide.classList.toggle('on', h);
+  btnHide.querySelector('.ic').textContent = h ? '👀' : '🙈';
+  btnHide.querySelector('.lbl').textContent = h ? 'Visa svaret' : 'Dölj svaret';
+}
+btnHide.onclick = () => setHidden(!readout.classList.contains('hidden'));
+
+document.getElementById('btnRandom').onclick = () => {
+  const step = [60, 30, 15, 5][Math.floor(Math.random() * 4)];
+  total = Math.floor(Math.random() * (1440 / step)) * step;
+  render();
+  setHidden(true);
+};
+
+document.getElementById('btnSpeak').onclick = () => {
+  if (!('speechSynthesis' in window)) return;
+  const text = 'Klockan är ' + document.getElementById('words').textContent + ' ' + document.getElementById('period').textContent;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'sv-SE';
+  u.rate = 0.85;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+};
+
+document.getElementById('hourMode').onchange = e => {
+  const v = e.target.value;
+  hourNums.style.display = v === 'none' ? 'none' : '';
+  hourNums.querySelectorAll('.minor').forEach(t => t.style.display = v === 'quarter' ? 'none' : '');
+};
+
+setHidden(true);
+render();
+</script>
+</body>
+</html>
