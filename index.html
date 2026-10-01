@@ -212,20 +212,21 @@
 <div class="row">
   <label class="toggle">Nivå på frågorna:
     <select id="level">
-      <option value="1">1 · Hela timmar (tre)</option>
-      <option value="2">2 · + halvtimmar (halv fyra)</option>
-      <option value="3" selected>3 · + kvartar (kvart över)</option>
-      <option value="4">4 · + fem minuter (fem över)</option>
-      <option value="5">5 · + alla minuter (sju över)</option>
+      <option value="1">Hela timmar (tre)</option>
+      <option value="2">Halvtimmar (halv fyra)</option>
+      <option value="3" selected>Kvartar (kvart över)</option>
+      <option value="4">Fem minuter (fem över)</option>
+      <option value="5">Alla minuter (sju över)</option>
     </select>
   </label>
   <button type="button" class="info" aria-label="Vad betyder det här?" aria-expanded="false" aria-controls="levelHelp">i</button>
 </div>
 <p class="help" id="levelHelp" hidden>
   Nivån bestämmer vilka tider som kommer när du trycker på <b>Ny fråga</b>.
-  Nivå 1 ger bara hela timmar. Varje nivå lägger till en ny sorts tid
-  (halvtimmar, kvartar, fem minuter och till sist alla minuter) men
-  behåller alla tider från nivåerna under, så hela timmar kommer även på nivå 5.
+  Nivåerna går från lätt till svår. Varje nivå lägger till en ny sorts tid
+  men behåller tiderna från nivåerna ovanför i listan. På <i>Kvartar</i>
+  kommer alltså hela timmar, halvtimmar och kvartar, och på <i>Alla minuter</i>
+  kan alla tider komma, även hela timmar.
   Börja lågt och gå upp en nivå när barnet klarar de flesta frågorna.
 </p>
 
