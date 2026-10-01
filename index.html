@@ -212,19 +212,20 @@
 <div class="row">
   <label class="toggle">Nivå på frågorna:
     <select id="level">
-      <option value="60">1 · Hela timmar (3:00)</option>
-      <option value="30">2 · Halvtimmar (halv fyra)</option>
-      <option value="15" selected>3 · Kvartar (kvart över)</option>
-      <option value="5">4 · Fem minuter (fem över)</option>
-      <option value="1">5 · Alla minuter (3:07)</option>
+      <option value="1">1 · Hela timmar (tre)</option>
+      <option value="2">2 · + halvtimmar (halv fyra)</option>
+      <option value="3" selected>3 · + kvartar (kvart över)</option>
+      <option value="4">4 · + fem minuter (fem över)</option>
+      <option value="5">5 · + alla minuter (sju över)</option>
     </select>
   </label>
   <button type="button" class="info" aria-label="Vad betyder det här?" aria-expanded="false" aria-controls="levelHelp">i</button>
 </div>
 <p class="help" id="levelHelp" hidden>
   Nivån bestämmer vilka tider som kommer när du trycker på <b>Ny fråga</b>.
-  Nivå 1 ger bara hela timmar, och varje nivå lägger till lite mer:
-  halvtimmar, kvartar, fem minuter och till sist alla minuter.
+  Nivå 1 ger bara hela timmar. Varje nivå lägger till en ny sorts tid
+  (halvtimmar, kvartar, fem minuter och till sist alla minuter) men
+  behåller alla tider från nivåerna under, så hela timmar kommer även på nivå 5.
   Börja lågt och gå upp en nivå när barnet klarar de flesta frågorna.
 </p>
 
@@ -417,15 +418,31 @@ btnHide.onclick = () => setHidden(!readout.classList.contains('hidden'));
 
 // difficulty: the step (in minutes) a question's time is a multiple of
 const levelSel = document.getElementById('level');
-try { const saved = localStorage.getItem('level'); if (saved) levelSel.value = saved; } catch (e) {}
-levelSel.onchange = () => { try { localStorage.setItem('level', levelSel.value); } catch (e) {} };
+try {
+  const saved = localStorage.getItem('questionLevel');
+  if (saved && levelSel.querySelector(`option[value="${saved}"]`)) levelSel.value = saved;
+} catch (e) {}
+levelSel.onchange = () => { try { localStorage.setItem('questionLevel', levelSel.value); } catch (e) {} };
+
+// the kind of time each level adds, as the minutes it covers
+const LEVEL_MINUTES = [
+  [0],                                                       // 1: hela timmar
+  [30],                                                      // 2: halvtimmar
+  [15, 45],                                                  // 3: kvartar
+  [5, 10, 20, 25, 35, 40, 50, 55],                           // 4: fem minuter
+  Array.from({ length: 60 }, (_, m) => m).filter(m => m % 5) // 5: alla minuter
+];
 
 document.getElementById('btnRandom').onclick = () => {
-  const step = +levelSel.value;
+  const level = +levelSel.value;
   const prev = total;
-  // pick a new time, never the same one twice in a row
-  do { total = Math.floor(Math.random() * (1440 / step)) * step; }
-  while (total % 720 === prev % 720);
+  // every kind of time up to the chosen level is equally likely,
+  // and the same time never comes twice in a row
+  do {
+    const kinds = LEVEL_MINUTES[Math.floor(Math.random() * level)];
+    const m = kinds[Math.floor(Math.random() * kinds.length)];
+    total = Math.floor(Math.random() * 24) * 60 + m;
+  } while (total % 720 === prev % 720);
   render();
   setHidden(true);
 };
