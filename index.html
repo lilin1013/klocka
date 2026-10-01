@@ -97,7 +97,7 @@
   button:active { transform: scale(.96); }
   button.on { background: #ece0ff; border-color: var(--rim); }
   label.toggle select { font: inherit; font-size: 15px; padding: 4px 6px; border-radius: 8px; border: 2px solid var(--btn-border); background: var(--btn); color: var(--ink); }
-  .row:has(#digitInfo) { align-items: center; }
+  .row:has(.info) { align-items: center; }
   button.info {
     width: 26px; height: 26px; padding: 0;
     border-radius: 50%;
@@ -211,7 +211,14 @@
       <option value="1">5 · Alla minuter (3:07)</option>
     </select>
   </label>
+  <button type="button" class="info" aria-label="Vad betyder det här?" aria-expanded="false" aria-controls="levelHelp">i</button>
 </div>
+<p class="help" id="levelHelp" hidden>
+  Nivån bestämmer vilka tider som kommer när du trycker på <b>Ny fråga</b>.
+  Nivå 1 ger bara hela timmar, och varje nivå lägger till lite mer:
+  halvtimmar, kvartar, fem minuter och till sist alla minuter.
+  Börja lågt och gå upp en nivå när barnet klarar de flesta frågorna.
+</p>
 
 <div class="row">
   <label class="toggle">Siffror på klockan:
@@ -221,7 +228,7 @@
       <option value="none">Dölj alla</option>
     </select>
   </label>
-  <button type="button" class="info" id="digitInfo" aria-label="Vad betyder det här?" aria-expanded="false" aria-controls="digitHelp">i</button>
+  <button type="button" class="info" aria-label="Vad betyder det här?" aria-expanded="false" aria-controls="digitHelp">i</button>
 </div>
 <p class="help" id="digitHelp" hidden>
   Välj vilka siffror som syns på klockan. Med färre siffror blir det svårare:
@@ -434,12 +441,14 @@ document.getElementById('btnSpeak').onclick = () => {
   speechSynthesis.speak(u);
 };
 
-const digitInfo = document.getElementById('digitInfo');
-const digitHelp = document.getElementById('digitHelp');
-digitInfo.onclick = () => {
-  digitHelp.hidden = !digitHelp.hidden;
-  digitInfo.setAttribute('aria-expanded', String(!digitHelp.hidden));
-};
+// ⓘ buttons toggle the help text they point to
+document.querySelectorAll('button.info').forEach(btn => {
+  const help = document.getElementById(btn.getAttribute('aria-controls'));
+  btn.onclick = () => {
+    help.hidden = !help.hidden;
+    btn.setAttribute('aria-expanded', String(!help.hidden));
+  };
+});
 
 document.getElementById('hourMode').onchange = e => {
   const v = e.target.value;
