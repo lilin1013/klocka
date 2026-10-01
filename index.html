@@ -224,9 +224,9 @@
 <p class="help" id="levelHelp" hidden>
   Nivån bestämmer vilka tider som kommer när du trycker på <b>Ny fråga</b>.
   Nivåerna går från lätt till svår. Varje nivå lägger till en ny sorts tid
-  men behåller tiderna från nivåerna ovanför i listan. På <i>Kvartar</i>
-  kommer alltså hela timmar, halvtimmar och kvartar, och på <i>Alla minuter</i>
-  kan alla tider komma, även hela timmar.
+  men behåller tiderna från nivåerna ovanför i listan. Ungefär 6 av 10 frågor
+  är av den nya, svårare sorten, och resten blandas från de lättare nivåerna.
+  På <i>Kvartar</i> blir det alltså mest kvartar, men ibland hela timmar och halvtimmar.
   Börja lågt och gå upp en nivå när barnet klarar de flesta frågorna.
 </p>
 
@@ -437,10 +437,13 @@ const LEVEL_MINUTES = [
 document.getElementById('btnRandom').onclick = () => {
   const level = +levelSel.value;
   const prev = total;
-  // every kind of time up to the chosen level is equally likely,
-  // and the same time never comes twice in a row
+  // the level's own kind of time comes 60% of the time; the easier kinds
+  // share the rest. The same time never comes twice in a row.
   do {
-    const kinds = LEVEL_MINUTES[Math.floor(Math.random() * level)];
+    const k = level === 1 || Math.random() < 0.6
+      ? level - 1
+      : Math.floor(Math.random() * (level - 1));
+    const kinds = LEVEL_MINUTES[k];
     const m = kinds[Math.floor(Math.random() * kinds.length)];
     total = Math.floor(Math.random() * 24) * 60 + m;
   } while (total % 720 === prev % 720);
