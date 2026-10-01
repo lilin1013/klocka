@@ -95,7 +95,17 @@
   }
   button:active { transform: scale(.96); }
   button.on { background: #ece0ff; border-color: var(--rim); }
-  label.toggle select { font: inherit; font-size: 15px; padding: 4px 6px; border-radius: 8px; border: 2px solid var(--btn-border); background: var(--btn); color: var(--ink); }
+  /* custom chevron so every browser gets the same spacing after the arrow */
+  label.toggle select {
+    font: inherit; font-size: 15px;
+    padding: 5px 34px 5px 10px;
+    border-radius: 8px; border: 2px solid var(--btn-border);
+    color: var(--ink);
+    -webkit-appearance: none; appearance: none;
+    background: var(--btn) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%239b5de5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+    cursor: pointer;
+  }
+  label.toggle select:focus-visible { outline: 2px solid var(--rim); outline-offset: 2px; }
   .row:has(.info) { align-items: center; }
   button.info {
     width: 26px; height: 26px; padding: 0;
