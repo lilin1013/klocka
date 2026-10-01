@@ -62,7 +62,6 @@
   .digital .hh { color: var(--hour); }
   .digital .mm { color: var(--minute); }
   .words { font-size: 26px; margin-top: 2px; }
-  .words .period { color: var(--soft); font-size: 20px; }
   .row {
     display: flex;
     flex-wrap: wrap;
@@ -127,7 +126,6 @@
     .readout { margin-top: 0; min-height: 84px; }
     .digital { font-size: 40px; }
     .words { font-size: 21px; }
-    .words .period { font-size: 16px; }
     button { font-size: 12.5px; padding: 7px 2px; }
     button .ic { font-size: 20px; }
   }
@@ -191,7 +189,7 @@
 
 <div class="readout" id="readout">
   <div class="digital"><span class="hh" id="dh">3</span>:<span class="mm" id="dm">00</span></div>
-  <div class="words"><span id="words">tre</span> <span class="period" id="period">på eftermiddagen</span></div>
+  <div class="words"><span id="words">tre</span></div>
 </div>
 
 <div class="row buttons">
@@ -314,14 +312,6 @@ let total = 15 * 60;
 const HOURS = ['tolv','ett','två','tre','fyra','fem','sex','sju','åtta','nio','tio','elva','tolv'];
 const NUMS = ['noll','en','två','tre','fyra','fem','sex','sju','åtta','nio','tio','elva','tolv',
               'tretton','fjorton','femton','sexton','sjutton','arton','nitton','tjugo'];
-function periodOf(h24) {
-  if (h24 < 5) return 'på natten';
-  if (h24 < 9) return 'på morgonen';
-  if (h24 < 12) return 'på förmiddagen';
-  if (h24 < 13) return 'mitt på dagen';
-  if (h24 < 18) return 'på eftermiddagen';
-  return 'på kvällen';
-}
 // "fem", "tio", "kvart", "tjugo" stand alone; other counts get "minut(er)"
 function mins(n) {
   if (n === 15) return 'kvart';
@@ -350,7 +340,6 @@ function render() {
 
   document.getElementById('dh').textContent = h12;
   document.getElementById('dm').textContent = String(m).padStart(2, '0');
-  document.getElementById('period').textContent = periodOf(h24);
 
   const w = swedishTime(h12, m);
   document.getElementById('words').textContent = w;
@@ -433,7 +422,7 @@ document.getElementById('btnRandom').onclick = () => {
 
 document.getElementById('btnSpeak').onclick = () => {
   if (!('speechSynthesis' in window)) return;
-  const text = 'Klockan är ' + document.getElementById('words').textContent + ' ' + document.getElementById('period').textContent;
+  const text = 'Klockan är ' + document.getElementById('words').textContent;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'sv-SE';
   u.rate = 0.85;
