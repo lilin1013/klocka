@@ -97,6 +97,21 @@
   button:active { transform: scale(.96); }
   button.on { background: #ece0ff; border-color: var(--rim); }
   label.toggle select { font: inherit; font-size: 15px; padding: 4px 6px; border-radius: 8px; border: 2px solid var(--btn-border); background: var(--btn); color: var(--ink); }
+  .row:has(#digitInfo) { align-items: center; }
+  button.info {
+    width: 26px; height: 26px; padding: 0;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font: italic 700 15px Georgia, serif;
+    color: var(--rim); border-color: var(--rim);
+  }
+  button.info[aria-expanded="true"] { background: var(--rim); color: #fff; }
+  .help {
+    max-width: 420px; margin: 8px 0 0; padding: 10px 14px;
+    background: var(--btn); border: 2px solid var(--btn-border); border-radius: 12px;
+    font-size: 14px; line-height: 1.45; color: var(--ink); text-align: left;
+  }
+  .help[hidden] { display: none; }
   label.toggle { display: flex; align-items: center; gap: 6px; font-size: 16px; color: var(--soft); }
 
   /* narrower screens (iPad portrait, phones): bear sits under the clock */
@@ -206,7 +221,13 @@
       <option value="none">Dölj alla</option>
     </select>
   </label>
+  <button type="button" class="info" id="digitInfo" aria-label="Vad betyder det här?" aria-expanded="false" aria-controls="digitHelp">i</button>
 </div>
+<p class="help" id="digitHelp" hidden>
+  Välj vilka siffror som syns på klockan. Med färre siffror blir det svårare:
+  barnet får själv komma ihåg var timmarna sitter. Börja med alla siffror,
+  prova sedan bara 12, 3, 6 och 9, och till sist inga alls.
+</p>
 
 <script>
 const NS = 'http://www.w3.org/2000/svg';
@@ -411,6 +432,13 @@ document.getElementById('btnSpeak').onclick = () => {
   u.rate = 0.85;
   speechSynthesis.cancel();
   speechSynthesis.speak(u);
+};
+
+const digitInfo = document.getElementById('digitInfo');
+const digitHelp = document.getElementById('digitHelp');
+digitInfo.onclick = () => {
+  digitHelp.hidden = !digitHelp.hidden;
+  digitInfo.setAttribute('aria-expanded', String(!digitHelp.hidden));
 };
 
 document.getElementById('hourMode').onchange = e => {
